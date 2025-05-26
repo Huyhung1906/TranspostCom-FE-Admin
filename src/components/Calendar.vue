@@ -5,11 +5,16 @@
       <select
         v-model="selectedRoute"
         class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        @change="onRouteOrDateChange"
       >
         <option value="" disabled>Chọn tuyến đường</option>
-        <option value="tuyen1">Tuyến 1: Bến Tre - TP.HCM</option>
-        <option value="tuyen2">Tuyến 2: Bến Tre - Cần Thơ</option>
-        <option value="tuyen3">Tuyến 3: Bến Tre - Vĩnh Long</option>
+        <option
+          v-for="route in routes"
+          :key="route.id"
+          :value="route.id"
+        >
+          {{ route.departure_point }} - {{ route.destination_point }}
+        </option>
       </select>
     </div>
 
@@ -22,7 +27,7 @@
         <select
           v-model="selectedMonth"
           class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-          @change="updateCalendar"
+          @change="onMonthChange"
         >
           <option v-for="month in 12" :key="month" :value="month">
             Tháng {{ month }}
@@ -84,60 +89,132 @@
         <span class="text-xs leading-none mt-1">{{ trip.soldSeats }}/{{ trip.totalSeats }}</span>
       </button>
     </div>
+    <!-- SeatGrid: truyền selectedTrip -->
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+const emit = defineEmits(['tripSelected'])
 
+
+const year = 2025
+const weekDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+
+// Reactive state
+const routes = ref([])
 const selectedRoute = ref('')
 const selectedMonth = ref(new Date().getMonth() + 1)
-const year = 2025
 const selectedDay = ref(null)
 const daysInMonth = ref(31)
 const startDay = ref(0)
+const trips = ref([])
 const selectedTrip = ref(null)
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
-const weekDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+// 1. Fetch danh sách tuyến đường từ API
+async function fetchRoutes() {
+  try {
+        const res = await fetch(`${API_BASE_URL}/route/list`)
+    if (!res.ok) throw new Error('Không thể lấy danh sách tuyến đường')
+    const json = await res.json()
+    if (json.status === 200 && json.data) {
+      routes.value = json.data
+    } else {
+      console.error('Lỗi API tuyến đường:', json)
+    }
+  } catch (error) {
+    console.error('Lỗi fetchRoutes:', error)
+  }
+}
 
+// 2. Cập nhật lịch (số ngày, ngày bắt đầu tháng)
 function updateCalendar() {
   daysInMonth.value = new Date(year, selectedMonth.value, 0).getDate()
   startDay.value = new Date(year, selectedMonth.value - 1, 1).getDay()
-
+  // Reset ngày chọn nếu vượt tháng mới
   if (selectedDay.value > daysInMonth.value) {
     selectedDay.value = null
   }
 }
 
-function selectDay(day) {
-  selectedDay.value = day
-  selectedTrip.value = null // reset chọn chuyến khi đổi ngày (tuỳ bạn)
+// 3. Gọi API lấy chuyến xe theo tuyến và ngày
+async function fetchTrips() {
+  if (!selectedRoute.value || !selectedDay.value) {
+    trips.value = []
+    selectedTrip.value = null
+    return
+  }
+
+  // Format date dạng YYYY-MM-DD
+  const dateStr = `${year}-${String(selectedMonth.value).padStart(2, '0')}-${String(selectedDay.value).padStart(2, '0')}`
+
+  try {
+    const url = `${API_BASE_URL}/trip/?route_id=${selectedRoute.value}&date=${dateStr}`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('Không thể lấy danh sách chuyến xe')
+    const json = await res.json()
+    if (json.status === 200 && json.data) {
+      // Map dữ liệu API về cấu trúc của trips button (giả định)
+      trips.value = json.data.map(trip => ({
+        id: trip.id,
+        time: trip.departure_time.slice(11,16),          // hoặc trip.departure_time tùy API
+        soldSeats: trip.sold_tickets,
+        totalSeats: trip.total_tickets ,
+        status: trip.status || 'normal',
+      }))
+      selectedTrip.value = null
+    } else {
+      trips.value = []
+      selectedTrip.value = null
+      console.error('Lỗi API chuyến xe:', json)
+    }
+  } catch (error) {
+    trips.value = []
+    selectedTrip.value = null
+    console.error('Lỗi fetchTrips:', error)
+  }
 }
 
-// Dữ liệu giả định chuyến xe
-const trips = ref([
-  { id: 1, time: '06:00', soldSeats: 2, totalSeats: 33, status: 'few-seats' },
-  { id: 2, time: '07:00', soldSeats: 10, totalSeats: 33, status: 'normal' },
-  { id: 3, time: '08:00', soldSeats: 25, totalSeats: 33, status: 'normal' },
-  { id: 4, time: '09:00', soldSeats: 31, totalSeats: 33, status: 'normal' },
-  { id: 5, time: '10:00', soldSeats: 29, totalSeats: 33, status: 'normal' },
-  { id: 6, time: '11:00', soldSeats: 5, totalSeats: 33, status: 'few-seats' },
-  { id: 7, time: '12:00', soldSeats: 33, totalSeats: 33, status: 'completed' },
-  { id: 8, time: '13:00', soldSeats: 20, totalSeats: 33, status: 'normal' },
-  { id: 9, time: '14:00', soldSeats: 31, totalSeats: 33, status: 'normal' },
-  { id: 10, time: '15:00', soldSeats: 32, totalSeats: 33, status: 'normal' },
-  { id: 11, time: '16:00', soldSeats: 4, totalSeats: 33, status: 'few-seats' },
-  { id: 12, time: '17:00', soldSeats: 33, totalSeats: 33, status: 'completed' },
-  { id: 13, time: '18:00', soldSeats: 15, totalSeats: 33, status: 'normal' },
-  { id: 14, time: '19:00', soldSeats: 7, totalSeats: 33, status: 'few-seats' },
-  { id: 15, time: '20:00', soldSeats: 28, totalSeats: 33, status: 'normal' },
-])
+// 4. Xử lý khi thay đổi tháng (cập nhật lịch và reset ngày, chuyến)
+function onMonthChange() {
+  updateCalendar()
+  selectedDay.value = null
+  trips.value = []
+  selectedTrip.value = null
+}
 
+// 5. Xử lý khi chọn ngày
+function selectDay(day) {
+  selectedDay.value = day
+  selectedTrip.value = null
+  fetchTrips()
+}
+
+// 6. Xử lý khi chọn tuyến hoặc ngày đổi (reload chuyến)
+function onRouteOrDateChange() {
+  selectedTrip.value = null
+  fetchTrips()
+}
+
+// 7. Chọn chuyến
 function selectTrip(trip) {
-  if (trip.status === 'completed') return // không chọn được chuyến đã đi
+  if (trip.status === 'completed') return
   selectedTrip.value = trip
+  emit('tripSelected', trip) // Gửi chuyến xe ra ngoài
+
 }
 
 // Khởi tạo
-updateCalendar()
+onMounted(() => {
+  fetchRoutes()
+  updateCalendar()
+})
+
+// Nếu muốn tự động fetch khi selectedRoute hoặc selectedDay thay đổi (ví dụ thay đổi bằng code), có thể dùng watch
+watch([selectedRoute, selectedDay], ([newRoute, newDay]) => {
+  if (newRoute && newDay) {
+    fetchTrips()
+  }
+})
 </script>
