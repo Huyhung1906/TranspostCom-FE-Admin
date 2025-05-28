@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>In vé</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: "Roboto", sans-serif;
+      font-size: 14px;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    .ticket {
+      width: 12cm;
+      height: 18cm;
+      margin: 20px auto;
+      background: #fff;
+      border: 2px solid #1a4d7a;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-radius: 8px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid #1a4d7a;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    .header-info {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .vehicle-info {
+      font-size: 14px;
+      color: #333;
+      margin-top: 4px;
+    }
+
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #ccc;
+    }
+
+    .title {
+      flex-grow: 1;
+      font-size: 22px;
+      color: #1a4d7a;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 1.5px;
+    }
+
+    .content {
+      flex-grow: 1;
+      padding-bottom: 10px;
+    }
+
+    .mb-2 {
+      margin-bottom: 8px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .mb-2 strong {
+      color: #1a4d7a;
+      font-weight: 600;
+      width: 140px;
+    }
+
+    .mb-2 small {
+      font-style: italic;
+      color: #666;
+      margin-left: 6px;
+    }
+
+    /* Nổi bật thông tin hành khách */
+    .passenger-highlight {
+      border-left: 4px solid #1a4d7a;
+      background-color: #e7f0fa;
+      padding-left: 12px;
+      font-weight: 700;
+      color: #0d2f5b;
+      margin-bottom: 15px;
+      user-select: text;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #666;
+      border-top: 1px dashed #ccc;
+      padding-top: 10px;
+      text-align: center;
+    }
+
+    .print-date {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #999;
+      text-align: right;
+    }
+
+    /* Thêm vào phần style */
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .half-width {
+      flex: 1;
+    }
+
+    #qrcode {
+      width: 80px;
+      height: 80px;
+      border: 1px solid #ccc;
+      padding: 4px;
+      background: #fff;
+      margin: 10px auto 0;
+    }
+
+    /* Icon mạng xã hội và số điện thoại ở footer */
+    .footer-icons {
+      margin-top: 8px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .footer-icons a {
+      color: #1a4d7a;
+      text-decoration: none;
+      font-size: 16px;
+    }
+
+    .footer-icons a:hover {
+      color: #145a8b;
+    }
+
+    /* Icon SVG đơn giản */
+    .icon {
+      vertical-align: middle;
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+
+<body onload="window.print(); setTimeout(() => window.close(), 500);">
+  <div class="ticket">
+    <div class="header">
+      <img src="src/assets/image/logo_transpost.jpg" alt="Logo" class="logo" />
+
+      <div class="header-info">
+        <div class="title">NHÀ XE HUY HƯNG</div>
+        <div class="vehicle-info">Xe: {{vehicle}}</div>
+      </div>
+    </div>
+
+
+    <div class="content">
+      <div class="passenger-highlight">
+        Hành khách: <span id="passenger_name">{{passenger_name}}</span><br />
+        Điện thoại: <span>{{passenger_phone}}</span><br />
+        Email: <span>{{passenger_email}}</span>
+      </div>
+
+      <div class="mb-2"><strong>Chuyến đi:</strong><span id="trip_id">{{trip_id}}</span></div>
+      <!-- Thêm container flex cho Giá vé và Điểm đón -->
+      <div class="flex-row">
+        <div class="mb-2 half-width"><strong>Số ghế:</strong><span id="seat_number">{{seat_number}}</span></div>
+        <div class="mb-2 half-width"><strong>Mã vé:</strong><span id="id">{{id}}</span></div>
+      </div>
+      <div class="mb-2"><strong>Ngày:</strong><span id="day">{{day}}</span></div>
+      <div class="mb-2">
+        <strong>Số ký hành lý:</strong><span>{{luggage_weight}} kg</span>
+        <small>(Tối đa 30kg)</small>
+      </div>
+      <div class="mb-2"><strong>Có trẻ em dưới 6 tuổi:</strong><span>{{has_child_under_6}}</span></div>
+      <div class="mb-2"><strong>Phí phụ thu trẻ em:</strong><span id="child">{{child_fee}}</span></div>
+      <!-- Thêm container flex cho Giá vé và Điểm đón -->
+      <div class="flex-row">
+        <div class="mb-2 half-width"><strong>Điểm đón:</strong><span>{{pickup_point}}</span></div>
+        <div class="mb-2 half-width"><strong>Giá vé:</strong><span id="price">{{price}}</span></div>
+      </div>
+      <div class="qr-note-container" style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
+        <canvas id="qrcode" style="border: 1px solid #ccc; padding: 4px; background: #fff;"></canvas>
+        <div class="qr-note" style="font-size: 12px; color: #555; max-width: 8cm;">
+          <strong>Lưu ý:</strong><br />
+          Vui lòng giữ vé này cẩn thận.<br />
+          QR code dùng để kiểm tra và lên xe nhanh chóng.<br />
+          Liên hệ hotline 1900 8888 nếu cần hỗ trợ.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-top">
+        <div class="footer-left">
+          Xin vui lòng đến sớm 15 phút trước giờ xe chạy.
+        </div>
+        <div>
+          Nhân viên: <span id="user"></span>
+        </div>
+        <div class="footer-right" id="printDate"></div>
+      </div>
+
+      <div class="footer-icons">
+        <a href="https://www.facebook.com/YourPage" target="_blank" title="Facebook" class="footer-icon-link">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M22 12c0-5.522-4.477-10-10-10S2 6.478 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.988h-2.54v-2.89h2.54v-2.205c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.464h-1.26c-1.243 0-1.63.772-1.63 1.562v1.874h2.773l-.443 2.89h-2.33v6.988C18.343 21.127 22 16.99 22 12z" />
+          </svg>
+          <span class="icon-text">/fb.huyhung</span>
+        </a>
+
+        <a href="mailto:support@huyhung.com" title="Email" class="footer-icon-link">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M20 4H4c-1.103 0-2 .897-2 2v12c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+          </svg>
+          <span class="icon-text">/email.support</span>
+        </a>
+
+        <a href="https://www.huyhung.com" target="_blank" title="Website" class="footer-icon-link">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path
+              d="M12 2a10 10 0 0 0-3.536 19.192l.053-.03c.433-.24.764-.59 1.012-1.042a6.524 6.524 0 0 1-2.217-3.347 6.508 6.508 0 0 1 .832-5.385c.63-.967 1.607-1.722 2.749-2.056 1.142-.334 2.347-.109 3.317.635a4.993 4.993 0 0 1 1.697 2.243 4.99 4.99 0 0 1-.426 4.593c-.524.8-1.373 1.373-2.354 1.648-.98.274-2.05.183-2.963-.264a4.996 4.996 0 0 1-1.497-1.167 4.996 4.996 0 0 1-.732-1.533 9.994 9.994 0 0 0 6.95-8.725z" />
+          </svg>
+          <span class="icon-text">/www.huyhung.com</span>
+        </a>
+
+        <span title="Tổng đài hỗ trợ"
+          style="color:#1a4d7a; font-weight:600; display: flex; align-items: center; gap: 6px;">
+          📞 1900 8888
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- QRCode.js -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    // In ngày giờ
+    const printDateElem = document.getElementById("printDate");
+    const now = new Date();
+    printDateElem.textContent =
+      "Ngày in vé: " +
+      now.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+    // QR code nội dung
+    const passenger_name = document.getElementById("passenger_name").textContent.trim();
+    const trip_id = document.getElementById("trip_id").textContent.trim();
+    const seat_number = document.getElementById("seat_number").textContent.trim();
+    const id = document.getElementById("id").textContent.trim();
+    const day = document.getElementById("day").textContent.trim();
+
+    const qrContent = `Vé: ${id}, Ngày: ${day}, Chuyến: ${trip_id}, Ghế: ${seat_number}, Hành khách: ${passenger_name}`;
+
+    QRCode.toCanvas(
+      document.getElementById("qrcode"),
+      qrContent,
+      { width: 80, margin: 1 },
+      function (error) {
+        if (error) console.error(error);
+      }
+    );
+
+    // Hiển thị tên nhân viên từ localStorage
+    const userElement = document.getElementById("user");
+    const username = localStorage.getItem("fullname");
+    document.getElementById("user").textContent = username || "N/A";
+  </script>
+
+  <!-- Import định dạng tiền tệ -->
+  <script type="module">
+    import { formatCurrencyVND } from './src/assets/js/formatprice.js';
+    const priceElement = document.getElementById("price");
+    const priceChild = document.getElementById("child");
+    const rawPrice = priceElement.textContent.trim();
+    const rawChild = priceChild.textContent.trim();
+    priceElement.textContent = formatCurrencyVND(rawPrice);
+    priceChild.textContent = formatCurrencyVND(rawChild);
+  </script>
+</body>
+
+</html>

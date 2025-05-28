@@ -76,34 +76,36 @@ export default defineComponent({
     const router = useRouter()
 
     const handleLogin = async () => {
-      error.value = null
-      loading.value = true
+  error.value = null
+  loading.value = true
 
-      // Gửi username chứ không phải email
-      const payload: LoginPayload = {
-        username: username.value,
-        password: password.value,
-      }
+  const payload: LoginPayload = {
+    username: username.value,
+    password: password.value,
+  }
 
-      try {
-        const response = await login(payload)
-        const token = response.data.access_token // Lấy đúng token từ response
-        const name = username.value
-        // Lưu token vào 
-        // localStorage
-        localStorage.setItem('access_token', token)
-        localStorage.setItem('username', name);
+  try {
+    const response = await login(payload)
+    const token = response.data.access_token
+    const user = response.data.user
 
-        router.push('/booking')
-        alert('Đăng nhập thành công!')
+    // Lưu token và thông tin user vào localStorage
+    localStorage.setItem('access_token', token)
+    localStorage.setItem('username', user.username)    // username
+    localStorage.setItem('fullname', user.fullname)    // full name
 
-        // TODO: redirect hoặc xử lý tiếp theo sau khi login thành công
-      } catch (err: any) {
-        error.value = err.response?.data?.message?.non_field_errors?.[0] || 'Lỗi đăng nhập'
-      } finally {
-        loading.value = false
-      }
-    }
+    router.push('/booking')
+    alert('Đăng nhập thành công!')
+  } catch (err: any) {
+    console.log('Login error:', err.response)
+    error.value = err.response?.data?.message?.non_field_errors?.[0] || 
+                  err.response?.data?.detail || 
+                  'Lỗi đăng nhập'
+  } finally {
+    loading.value = false
+  }
+}
+
 
     return {
       username,

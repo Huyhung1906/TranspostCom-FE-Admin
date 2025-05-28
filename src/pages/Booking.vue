@@ -10,7 +10,10 @@
 
       <!-- Khu vực đặt vé -->
       <div class="w-4/5 p-2 overflow-auto">
-          <SeatGrid :seats="seatsData" />
+          <SeatGrid
+  :seats="seatsData"
+  :current-trip-id="selectedTrip?.id"
+  @reloadTickets="handleTripSelected" />
       </div>
     </div>
   </div>
@@ -21,11 +24,18 @@ import { ref } from 'vue'
 import HeaderBar from '@/components/HeaderBar.vue'
 import Calendar from '@/components/Calendar.vue'
 import SeatGrid from '@/components/SeatGrid.vue'
+const selectedTrip = ref(null)
+const trip = ref(null) // giữ trip đã chọn
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
 const seatsData = ref([]) // khai báo reactive biến lưu danh sách vé
 // Hàm gọi API khi nhận trip được chọn từ Calendar
 async function handleTripSelected(trip) {
+  
+  selectedTrip.value = trip
+  trip.value = selectedTrip // lưu trip
+
   try {
     const res = await fetch(`${API_BASE_URL}/ticket/getlist/${trip.id}`)
     if (!res.ok) throw new Error('Lỗi gọi API')
