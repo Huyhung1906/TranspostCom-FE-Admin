@@ -2,6 +2,7 @@
   <div class="w-full">
     <!-- Thanh nút chức năng trên cùng -->
     <div class="flex flex-wrap gap-2 mb-4">
+      <!-- Nút In phiếu luôn hoạt động -->
       <button @click="exportTicketsToPDF"
         class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -11,7 +12,10 @@
         </svg>
         In phiếu
       </button>
-      <button class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center gap-1">
+
+      <!-- Các nút thao tác khác bị disabled khi chuyến xe đã xuất bến -->
+      <button :disabled="isStarted" :class="{ 'opacity-50 cursor-not-allowed': isStarted }"
+        class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
           stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -19,7 +23,9 @@
         </svg>
         Làm mới
       </button>
-      <button class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 flex items-center gap-1">
+
+      <button :disabled="isStarted" :class="{ 'opacity-50 cursor-not-allowed': isStarted }"
+        class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
           stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -28,7 +34,8 @@
         Đón trả
       </button>
 
-      <button class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 flex items-center gap-1">
+      <button :disabled="isStarted" :class="{ 'opacity-50 cursor-not-allowed': isStarted }"
+        class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 flex items-center gap-1">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
           stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 12H3m12 0l-4-4m4 4l-4 4m7 4v-3a4 4 0 00-4-4H7" />
@@ -36,23 +43,47 @@
         Trung chuyển
       </button>
 
-      <button class="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 flex items-center gap-1">
+      <!-- Nút mở form -->
+      <button @click="showTripForm = true" :disabled="isStarted" :class="[
+        'bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 flex items-center gap-1',
+        isStarted ? 'opacity-50 cursor-not-allowed' : ''
+      ]">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
           stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5h6M7 7h6M6 11h6M5 15h6M4 19h6" />
         </svg>
-        Cập nhập số xe - tài xế
+        Cập nhật số xe - tài xế
       </button>
 
-      <button class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center gap-1">
+      <!-- Popup TripEditForm -->
+      <div v-if="showTripForm" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md relative">
+          <!-- Nút đóng -->
+          <button @click="showTripForm = false" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">
+            ×
+          </button>
+
+          <!-- Component form -->
+          <TripEditForm :trip="trip" @updated="handleTripUpdated" @cancel="showTripForm = false" />
+        </div>
+      </div>
+
+
+
+      <!-- Nút Xuất bến -->
+      <button @click="handleStartTrip" :disabled="isStarted || isStarting" :class="[
+        'bg-red-600 text-white px-3 py-1 rounded flex items-center gap-1 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed',
+        { 'opacity-50 cursor-not-allowed': isStarted }
+      ]">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
           stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" />
         </svg>
-        Xuất bến
+        {{ isStarted ? 'Đã xuất bến' : 'Xuất bến' }}
       </button>
     </div>
+
     <!-- Header -->
     <div
       class="grid grid-cols-4 gap-x-6 gap-y-2 font-semibold bg-gray-100 p-4 rounded w-full text-center border border-gray-300 shadow-sm">
@@ -88,9 +119,12 @@
 
         <!-- Nút nhỏ -->
         <div class="flex justify-end space-x-2 mt-2">
-          <button class="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600">C</button>
-          <button @click="openForm(seat)"
-            class="bg-green-500 text-white text-xs px-2 py-1 rounded hover:bg-green-600">D</button>
+          <button class="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600" :disabled="isStarted"
+            :class="{ 'opacity-50 cursor-not-allowed': isStarted }">C</button>
+
+          <button @click="openForm(seat)" class="bg-green-500 text-white text-xs px-2 py-1 rounded hover:bg-green-600"
+            :disabled="isStarted" :class="{ 'opacity-50 cursor-not-allowed': isStarted }">D</button>
+
           <button @click="printTicket(seat)"
             class="bg-gray-500 text-white text-xs px-2 py-1 rounded hover:bg-gray-600">In</button>
         </div>
@@ -103,8 +137,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import TicketForm from './TicketForm.vue'
+import { getPrintWindowContent } from '../utils/printWindowContent.ts'
+import axios from 'axios'
+import TripEditForm from './TripEditForm.vue'
+import pdfMake from 'pdfmake/build/pdfmake'
+import pdfFonts from 'pdfmake/build/vfs_fonts'
+const API_BASE_URL = import.meta.env.VITE_API_URL || ''
+// ⚠️ Gán vfs đúng cách:
+pdfMake.vfs = pdfFonts.vfs
+
+
 
 const props = defineProps({
   seats: Array,
@@ -173,36 +217,199 @@ const printTicket = async (ticket) => {
 
   // Mở cửa sổ mới để in
   const printWindow = window.open('', '_blank', 'width=1000,height=600')
+  const fullHtml = getPrintWindowContent(template)
 
-  printWindow.document.open()
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>In vé</title>
-        <style>
-          @media print {
-            @page {
-              size: 12.2cm 19.2cm;
-              margin: 0;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-            }
+  if (printWindow) {
+    printWindow.document.open()
+    printWindow.document.write(fullHtml)
+    printWindow.document.close()
+  } else {
+    alert('Không thể mở cửa sổ in')
+  }
+}
+const exportTicketsToPDF = () => {
+  if (!props.seats || props.seats.length === 0) {
+    alert('Không có vé để in')
+    return
+  }
+
+  const seats = props.seats
+  const trip = seats[0].trip || {}
+  const route = trip.route || {}
+
+  // Header thông tin chuyến đi
+  const header = [
+    { text: 'Nhà Xe Huy Hưng', style: 'header', alignment: 'center', margin: [0, 0, 0, 10] },
+    {
+      columns: [
+        { text: `Tuyến: ${route.departure_point || ''} - ${route.destination_point || ''}` },
+        { text: `Ngày đi: ${new Date(trip.departure_time).toLocaleString()}`, alignment: 'right' }
+      ],
+      margin: [0, 0, 0, 5]
+    },
+    {
+      columns: [
+        { text: `Xe: ${trip.vehicle?.licenseplate || ''}` },
+        { text: `Tài xế: ${trip.driver?.fullname || ''}`, alignment: 'right' }
+      ],
+      margin: [0, 0, 0, 5]
+    },
+    { text: `Tổng số ghế: ${trip.vehicle?.chair || ''}`, margin: [0, 0, 0, 10] },
+    { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 760, y2: 0, lineWidth: 1 }] }
+  ]
+
+  // Bảng dữ liệu vé
+  const body = []
+
+  // Tiêu đề cột
+  body.push([
+    { text: 'Ghế', style: 'tableHeader' },
+    { text: 'Hành khách', style: 'tableHeader' },
+    { text: 'Điện thoại', style: 'tableHeader' },
+    { text: 'Email', style: 'tableHeader' },
+    { text: 'Điểm đón', style: 'tableHeader' },
+    { text: 'Hành lý (kg)', style: 'tableHeader' },
+    { text: 'Trẻ <6 tuổi', style: 'tableHeader' },
+    { text: 'Người đặt', style: 'tableHeader' },
+    { text: 'Ghi chú', style: 'tableHeader' }
+  ])
+
+  // Dữ liệu từng vé
+  seats.forEach(seat => {
+    body.push([
+      seat.seat_number || '',
+      seat.passenger_name || '',
+      seat.passenger_phone || '',
+      { text: seat.passenger_email || '', noWrap: false },
+      { text: seat.pickup_point || '', noWrap: false },
+      seat.luggage_weight != null ? seat.luggage_weight.toString() : '',
+      seat.has_child_under_6 ? 'Có' : 'Không',
+      seat.user?.email || seat.user?.username || '',
+      ''
+    ])
+  })
+
+  const docDefinition = {
+    pageSize: 'A4',
+    pageOrientation: 'landscape', // CHÌA KHÓA để không bị mất dữ liệu ngang
+    pageMargins: [20, 40, 20, 40],
+    content: [
+      ...header,
+      {
+        style: 'tableExample',
+        table: {
+          headerRows: 1,
+          widths: [30, 90, 70, 170, 150, 40, 40, 70, 50],
+          body: body
+        },
+        layout: {
+          fillColor: function (rowIndex) {
+            return rowIndex === 0
+              ? '#eaeaea'
+              : (rowIndex % 2 === 0 ? '#f9f9f9' : null)
           }
-        </style>
-      </head>
-      <body onload="window.print(); window.close();">
-        ${template}
-      </body>
-    </html>
-  `)
-  printWindow.document.close()
+        }
+      }
+    ],
+    styles: {
+      header: {
+        fontSize: 18,
+        bold: true
+      },
+      tableHeader: {
+        bold: true,
+        fontSize: 11,
+        color: 'black',
+        alignment: 'center'
+      },
+      tableExample: {
+        margin: [0, 5, 0, 15]
+      }
+    },
+    defaultStyle: {
+      fontSize: 10,
+      noWrap: false // Cho phép nội dung xuống dòng khi cần
+    }
+  }
+
+  pdfMake.createPdf(docDefinition).download(`Chuyến${trip.id || 'unknown'}_Ngay${trip.departure_time || 'uknown'}_Xe${trip.vehicle.licenseplate || 'unknown'}.pdf`)
+}
+const isStarted = ref(false)
+
+const checkStartedStatus = (trip) => {
+  if (!trip || !trip.notes) {
+    isStarted.value = false
+    return
+  }
+  const noteLower = trip.notes.toLowerCase()
+  isStarted.value = noteLower.includes('đã xuất phát') // hoặc từ khóa bạn dùng trong note
 }
 
+// gọi hàm check khi props thay đổi, ví dụ props.seats hoặc props.seats[0].trip
+watch(() => props.seats, (newSeats) => {
+  if (newSeats && newSeats.length > 0) {
+    checkStartedStatus(newSeats[0].trip)
+  } else {
+    isStarted.value = false
+  }
+}, { immediate: true })
+
+const handleStartTrip = async () => {
+  const tripId = props.seats?.[0]?.trip?.id
+  if (!tripId) {
+    alert('Không tìm thấy chuyến xe')
+    return
+  }
+  if (isStarted.value) {
+    alert('Chuyến xe đã xuất bến')
+    return
+  }
+  isStarted.value = true // disable nút ngay lập tức để tránh bấm lại
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/trip/${tripId}/start/`)
+    alert(response.data.message || 'Đã xuất bến thành công')
+
+    // Cập nhật lại trạng thái từ API trả về (nếu có)
+    if (response.data.data && response.data.data.notes) {
+      const noteLower = response.data.data.notes.toLowerCase()
+      isStarted.value = noteLower.includes('xuất bến')
+    } else {
+      // Nếu API không trả về note, giữ nguyên trạng thái
+      isStarted.value = true
+    }
+  } catch (error) {
+    console.error(error)
+    alert('Có lỗi khi xuất bến')
+    isStarted.value = false
+  }
+}
+const showTripForm = ref(false);
+// phải được truyền từ cha hoặc set ở đâu đó
+const fetchTrip = async () => {
+  const seats = props.seats
+  if (!seats || seats.length === 0) {
+    console.error("seats is empty or undefined");
+    return;
+  }
+  const trip = seats[0].trip || {}
+  if (!trip || !trip.id) {
+    console.error("trip or trip.id is undefined");
+    return;
+  }
+  try {
+    const response = await axios.get(`${API_BASE_URL}/trip/update/${trip.id}`);
+    console.log(trip)
+    trip.value = response.data.data;
+  } catch (error) {
+    console.error("Lỗi khi load lại trip:", error);
+  }
+};
+
+const handleTripUpdated = async () => {
+  await fetchTrip();
+  showTripForm.value = false;
+};
 </script>
 
 <style scoped>
@@ -224,5 +431,4 @@ const printTicket = async (ticket) => {
     margin: 0;
   }
 }
-
 </style>
